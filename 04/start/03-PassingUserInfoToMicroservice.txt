@@ -1,0 +1,25 @@
+
+
+1. On GloboTicket.Gateway project,
+   - On appsettings.json file add the following code 
+     on shopping basket gateway configuration:
+
+      "AddHeadersToRequest": {
+        "CurrentUser": "Claims[sub] > value"
+      }
+
+   - On Startup.cs file, add the following code on ConfigureServices() method:
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+2. On GloboTicket.Services.ShoppingBasket project,
+   - On BasketsController.cs file CheckoutBasketAsync() method, comment the follwoing code:
+            var userId = basketCheckout.UserId;
+     
+     and then add the following code:
+            var userId = Guid.Parse(HttpContext.Request.Headers["CurrentUser"][0]);
+
+3. Put breakpoint inside CheckoutBasketAsync() method
+
+4. Debug and run the app: do checkout process and see if it works
+
+

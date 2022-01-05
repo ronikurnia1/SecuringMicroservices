@@ -1,0 +1,59 @@
+
+
+1. On GloboTicket.Gateway project
+   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer v 3.1.5
+   - On ConfigureServices() method on Startup.cs file add the following code before services.AddOcelot():
+     
+            var authenticationScheme = "GloboTicketGatewayAuthenticationScheme";
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                   .AddJwtBearer(authenticationScheme, options =>
+                   {
+                       options.Authority = "https://localhost:5010";
+                       options.Audience = "globoticketgateway";
+                   });
+
+   - Edit appsettings.json file by adding the follwoing code 
+     inside "/api/baskets/{all}" DownstreamPathTemplate configuration:
+     
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
+      }
+
+     
+   - Edit appsettings.json file by adding the follwoing code 
+     inside "/api/baskets" DownstreamPathTemplate configuration:
+     
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
+      }
+
+2. Debug and run the app and add new ticket it should Unauthorized
+
+
+3. On GloboTicket.Services.Idenity project 
+   - On Config.cs file, add the following new ApiScope:     
+      new ApiScope("globoticketgateway.fullaccess")
+   
+   - On Config.cs file, add the following new ApiResource: 
+
+      new ApiResource("globoticketgateway", "GloboTicket Gateway")
+      {
+          Scopes = { "globoticketgateway.fullaccess" }
+      }
+
+
+   - Still on Config.cs file, add the following AllowedScopes on "GloboTicket Client" client:
+      "globoticketgateway.fullaccess"
+
+4. On GloboTicket.Web project,
+   - On Startup.cs file, add the following scope on OpenIdConnect() method:
+         options.Scope.Add("globoticketgateway.fullaccess");
+     
+  - On ShoppingBasketService.cs file add the following code on each methods 
+    calling Basket service:
+    
+        client.SetBearerToken(await httpContextAccessor.HttpContext.GetTokenAsync("access_token"));
+
+5. Debug and run the app and add a ticket to basket see if it works
+

@@ -1,0 +1,149 @@
+
+
+1. On GloboTicket.Services.Identity project, modify Config.cs file:
+
+   - Replace ApiScopes method with the following code:
+
+        public static IEnumerable<ApiScope> ApiScopes =>
+            new ApiScope[]
+            {
+                new ApiScope("eventcatalog.fullaccess"),
+                new ApiScope("shoppingbasket.fullaccess"),
+            };
+
+   - Replace ApiResources method with the following code:
+
+        public static IEnumerable<ApiResource> ApiResources =>
+          new ApiResource[]
+          {
+              new ApiResource("eventcatalog", "Event catalog API")
+                {
+                    Scopes = { "eventcatalog.fullaccess" }
+                },
+                new ApiResource("shoppingbasket", "Shopping basket API")
+                {
+                    Scopes = { "shoppingbasket.fullaccess" }
+                }
+          };
+
+
+   - Replace "GloboTicket Machine to machine Client" with the folowing code:
+
+                new Client
+                {
+                    ClientName = "GloboTicket Machine 2 Machine Client",
+                    ClientId = "globoticketm2m",
+                    ClientSecrets = { new Secret("eac7008f-1b35-4325-ac8d-4a71932e6088".Sha256()) },
+                    AllowedGrantTypes = GrantTypes.ClientCredentials,
+                    AllowedScopes = { "eventcatalog.fullaccess" }
+                },
+
+
+   - Replace "GloboTicket Interactive Client" with the folowing code:
+
+                new Client
+                {
+                    ClientName = "GloboTicket Interactive Client",
+                    ClientId = "globoticketinteractive",
+                    ClientSecrets = { new Secret("ce766e16-df99-411d-8d31-0f5bbc6b8eba".Sha256()) },
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RedirectUris = { "https://localhost:5000/signin-oidc" },
+                    PostLogoutRedirectUris = { "https://localhost:5000/signout-callback-oidc" },
+                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess" }
+                }
+
+
+
+2. On GloboTicket.Services.ShoppingBasket project, modify Startup.cs file:
+
+   - Modify the Audience from:   
+     options.Audience = "globoticket";
+
+     with:
+     options.Audience = "shoppingbasket";
+
+
+3. On GloboTicket.Services.EventCatalog project, modify Startup.cs file:
+
+   - Modify the Audience from:   
+     options.Audience = "globoticket";
+
+     with:
+     options.Audience = "eventcatalog";
+
+ 
+
+4. On GloboTicket.Web project: 
+
+   - Replace the following code on Startup.cs file:
+
+                options.Scope.Add("globoticket.fullaccess");
+     with:
+                options.Scope.Add("shoppingbasket.fullaccess");
+
+   - Replace the following code on EventCatalogService.cs file: 
+
+                        Scope = "globoticket.fullaccess"
+     with:
+                        Scope = "shoppingbasket.fullaccess"
+
+
+5. Run and try the solution (this time not using global audience)
+
+
+
+=========Refactoring============
+
+6. On GloboTicket.Services.Identity project, inside Config.cs file:
+   - Add new client using the following code:
+
+                new Client
+                {
+                    ClientName = "GloboTicket Client",
+                    ClientId = "globoticket",
+                    ClientSecrets = { new Secret("ce766e16-df99-411d-8d31-0f5bbc6b8eba".Sha256()) },
+                    AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
+                    RedirectUris = { "https://localhost:5000/signin-oidc" },
+                    PostLogoutRedirectUris = { "https://localhost:5000/signout-callback-oidc" },
+                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess",
+                    "eventcatalog.fullaccess" }
+                },
+
+
+7. On GloboTicket.Web project:
+   - On Startup.cs file, modify the AddOpenIdConnect() method with the following code:
+
+            .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+            {
+                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.Authority = "https://localhost:5010/";
+                options.ClientId = "globoticket";
+                options.ResponseType = "code";
+                options.SaveTokens = true;
+                options.ClientSecret = "ce766e16-df99-411d-8d31-0f5bbc6b8eba";
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.Scope.Add("shoppingbasket.fullaccess");
+            });
+
+   - Replace the ClientCredentialsTokenRequest on EventCatalogService.cs file from: 
+
+                    new ClientCredentialsTokenRequest
+                    {
+                        Address = discoveryDocumentResponse.TokenEndpoint,
+                        ClientId = "globoticketm2m",
+                        ClientSecret = "eac7008f-1b35-4325-ac8d-4a71932e6088",
+                        Scope = "globoticket.fullaccess"
+                    });
+
+     with:
+                    new ClientCredentialsTokenRequest
+                    {
+                        Address = discoveryDocumentResponse.TokenEndpoint,
+                        ClientId = "globoticket", 
+                        ClientSecret = "ce766e16-df99-411d-8d31-0f5bbc6b8eba",  //"eac7008f-1b35-4325-ac8d-4a71932e6088",
+                        Scope = "eventcatalog.fullaccess"
+                    });
+
+
+                        
+8. Run and try the solution (add ticket to shopping basket)

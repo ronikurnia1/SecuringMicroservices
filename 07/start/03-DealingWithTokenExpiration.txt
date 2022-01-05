@@ -1,0 +1,72 @@
+
+
+1. On GloboTicket.Services.Ordering project,
+   - On AzServiceBusConsumer.cs file, inside OnCheckoutMessageReceived() method replace
+     the following code:
+
+                if (!await tokenValidationService.ValidateTokenAsync(
+                        basketCheckoutMessage.SecurityContext.AccessToken))
+                {
+                    // log, cleanup, ... but don't throw an exception as that will result
+                    // in the message not being regarded as handled.  
+                    return;
+                }
+      
+     with this one:
+     
+                if (!await tokenValidationService.ValidateTokenAsync(
+                        basketCheckoutMessage.SecurityContext.AccessToken,
+                        message.SystemProperties.EnqueuedTimeUtc))
+                {
+                    // log, cleanup, ... but don't throw an exception as that will result
+                    // in the message not being regarded as handled.  
+                    return;
+                }
+
+
+   - On TokenValidationService.cs file, add a new argument called "receivedAt" (type DateTime) 
+     on ValidateTokenAsync() method so it will look like the following code:  
+
+        public async Task<bool> ValidateTokenAsync(string tokenToValidate, 
+            DateTime receivedAt)
+
+
+   - On TokenValidationService.cs file, inside ValidateTokenAsync() method modify the tokenValidationParameters 
+     variable with the following code:  
+
+                var tokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidAudience = "ordering",
+                    ValidIssuer = "https://localhost:5010",
+                    IssuerSigningKeys = issuerSigningKeys,
+                    LifetimeValidator = (notBefore, expires, securityToken, tokenValidationParameters) =>
+                    {
+                        return expires.Value.ToUniversalTime() > receivedAt.ToUniversalTime();
+                    }
+                };
+
+   - On AzServiceBusConsumer.cs file, put a breakpoint on the following line:
+            var orderId = Guid.NewGuid();
+
+
+2. Debug the app, do login, select a ticket and checkout.  
+   See if the breakpoint get hit (it means it wokrs as expected)
+
+3. Now, let's see if we can get this to fail.
+   - On GloboTicket.Services.Identity project, modify Config.cs file by adding the following code
+     for "shoppingbaskettodownstreamtokenexchangeclient" client:
+
+                    AccessTokenLifetime = 10,
+
+4. Put a breakpoint on BasketsController.cs file (GloboTicket.Services.ShoppingBasket project)
+   right before publishing message to service bus inside CheckoutBasketAsync() method.
+
+5. Put a breakpoint on AzServiceBusConsumer.cs file (GloboTicket.Services.Ordering project)
+   inside OnCheckoutMessageReceived() method on the return statement (token validation logic right after ValidateTokenAsync())
+
+6. Debug the app, do login and checkout, wait for about 10 seconds on breakpoint # 4.
+   Continue to debug and see if breakpoint # 5 get hit (return statement, that means the token is invalid)
+
+
+
+     

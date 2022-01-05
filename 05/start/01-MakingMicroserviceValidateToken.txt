@@ -1,0 +1,129 @@
+
+
+1. On GloboTicket.Services.EventCatalog project
+   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer v 3.1.5
+   - On Startup.cs file inside ConfigureServices() method 
+     add the following code:
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "https://localhost:5010";
+                    options.Audience = "eventcatalog";
+                });
+   
+   - On Startup.cs file inside ConfigureServices() method
+     add the following new policy:
+
+            var requireAuthenticatedUserPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+     
+     and modify the services.AddControllers() line, with the following code:
+
+            services.AddControllers(configure =>
+            {
+                configure.Filters.Add(new AuthorizeFilter(requireAuthenticatedUserPolicy));
+            });
+
+   - On Startup.cs file inside Configure() method
+     add the following code:
+
+            app.UseAuthentication();
+
+2. Do the exact same things on GloboTicket.Services.ShoppingBasket project
+   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer v 3.1.5
+   - On Startup.cs file inside ConfigureServices() method 
+     add the following code:
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "https://localhost:5010";
+                    options.Audience = "shoppingbasket";
+                });
+   
+   - On Startup.cs file inside ConfigureServices() method
+     add the following new policy:
+
+            var requireAuthenticatedUserPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+     
+     and modify the services.AddControllers() line, with the following code:
+
+            services.AddControllers(configure =>
+            {
+                configure.Filters.Add(new AuthorizeFilter(requireAuthenticatedUserPolicy));
+            });
+
+   - On Startup.cs file inside Configure() method
+     add the following code:
+
+            app.UseAuthentication();
+
+
+3. On GloboTicket.Services.Identity project,
+   - On Config.cs file, modify the AllowedScopes of "GloboTicket Client" client 
+     with the following config:
+
+                    AllowedScopes = { "openid", "profile",
+                         "globoticketgateway.fullaccess",
+                         "shoppingbasket.fullaccess",
+                         "eventcatalog.fullaccess" }
+
+   - On Config.cs file, modify the ApiResource from the following code:
+                    Scopes = { "eventcatalog.read", "eventcatalog.write" }
+     becomes:
+                    Scopes = { "eventcatalog.fullaccess" }
+
+
+4. On GloboTicket.Web project,
+   - On Startup.cs file, add the following code inside AddOpenIdConnect() method:
+            options.Scope.Add("eventcatalog.fullaccess");     
+
+
+   - On EventCatalogService.cs file, replace the body class with
+     the following code:
+
+        private readonly HttpClient client;
+        private readonly IHttpContextAccessor httpContextAccessor;
+
+        public EventCatalogService(HttpClient client,
+            IHttpContextAccessor httpContextAccessor)
+        {
+            this.client = client;
+            this.httpContextAccessor = httpContextAccessor;
+        }
+
+
+        public async Task<IEnumerable<Event>> GetAll()
+        {
+            client.SetBearerToken(await httpContextAccessor.HttpContext.GetTokenAsync("access_token"));
+            var response = await client.GetAsync("api/events");
+            return await response.ReadContentAs<List<Event>>();
+        }
+
+        public async Task<IEnumerable<Event>> GetByCategoryId(Guid categoryid)
+        {
+            client.SetBearerToken(await httpContextAccessor.HttpContext.GetTokenAsync("access_token"));
+            var response = await client.GetAsync($"api/events/?categoryId={categoryid}");
+            return await response.ReadContentAs<List<Event>>();
+        }
+
+        public async Task<Event> GetEvent(Guid id)
+        {
+            client.SetBearerToken(await httpContextAccessor.HttpContext.GetTokenAsync("access_token"));
+            var response = await client.GetAsync($"api/events/{id}");
+            return await response.ReadContentAs<Event>();
+        }
+
+        public async Task<IEnumerable<Category>> GetCategories()
+        {
+            client.SetBearerToken(await httpContextAccessor.HttpContext.GetTokenAsync("access_token"));
+            var response = await client.GetAsync("api/categories");
+            return await response.ReadContentAs<List<Category>>();
+        }
+
+
+5. Will continue in the next demo

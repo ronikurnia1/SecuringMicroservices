@@ -1,0 +1,47 @@
+
+
+1. On GloboTicket.Services.Identity project, modify Config.cs file:
+   
+   - Add new ApiSecope:
+                new ApiScope("eventcatalog.read"),
+                new ApiScope("eventcatalog.write")
+   
+   - Modify scope of "eventcatalog" ApiResource with the following code:
+                    Scopes = { "eventcatalog.read", "eventcatalog.write" }
+
+   - Modify AllowedScopes of "globoticket" client with the folloing code:
+                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess",
+                    "eventcatalog.read", "eventcatalog.write" }
+
+2. On GloboTicket.Web project:
+   - Modify the scope of ClientCredentialsTokenRequest in EventCatalogService.cs file from:
+                        Scope = "eventcatalog.fullaccess"
+     with:
+                        Scope = "eventcatalog.read"
+
+3. Run the solution and check the generated token using https://jwt.io/ 
+
+
+4. On GloboTicket.Services.EventCatalog project
+   - Modify Startup.cs file by adding AddAuthorization() inside ConfigureServices method
+     with the following code:
+
+                services.AddAuthorization(
+                options =>
+                {
+                    options.AddPolicy(
+                        "CanRead",
+                        policy => policy.RequireClaim("scope", "eventcatalog.read"));
+                });
+
+
+   - Modify EventController.cs file by adding the following Authorize attribute into controller level:
+         [Authorize(Policy = "CanRead")]
+
+5. Run the solution, see if you can access event catalog 
+
+6. To simulate, try to change the scope of the above "CanRead" policy with the following code: 
+
+                        policy => policy.RequireClaim("scope", "eventcatalog.write"));
+
+7. Run the solution, see if you can access event catalog 

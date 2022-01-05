@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "ZsbvC5DepcHFezbrcN9BZ1LJLkx64N8wSjOP5zWqsY2fDl88rVLGpMxq9rMCl4CDHR+FuTY251P3Y2/OlKrK3A==",
+  "success": true,
+  "projectFilePath": "C:\\MIP\\Customs\\Microservices\\Sources\\securing-microservices-asp-dot-net-core\\02\\demos\\start\\GloboTicket.Integration.Messages\\GloboTicket.Integration.Messages.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\rokurnia\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "C:\\Users\\rokurnia\\.nuget\\packages\\netstandard.library\\2.0.3\\netstandard.library.2.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

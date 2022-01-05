@@ -1,0 +1,34 @@
+
+
+
+1. On GloboTicket.Services.Identity project,
+   - On Config.cs file, modify "GloboTicket Client" client config
+     by adding the following code:
+
+              AllowOfflineAccess = true,
+              AccessTokenLifetime = 60,
+    
+    Note: 60 seconds this is not for production!
+
+2. On GloboTicket.Web project,
+   - Add NuGet package IdentityModel.AspNetCore v 2.0.0
+   - On Startup.cs file, add the following code inside the AddOpenIdConnect() method:
+
+                options.Scope.Add("offline_access");
+
+   - On Startup.cs file, add the following code inside ConfigureServices() method:
+
+            services.AddAccessTokenManagement();
+     
+     and add the following code at the end of every AddHttpClient() methods:
+
+            .AddUserAccessTokenHandler();
+
+
+   - On EventCatalogService.cs and ShoppingBasketService.cs files, remove the following code from 
+     all of the methods:
+
+            client.SetBearerToken(await httpContextAccessor.HttpContext.GetTokenAsync("access_token"));
+
+3. Debug the app, login and refresh the page and see the log of "Token exchange" 
+   as well as GrantType: "refresh_token"

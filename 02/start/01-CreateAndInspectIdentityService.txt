@@ -1,0 +1,17 @@
+﻿Add IdentityServer4 template:
+
+1. dotnet new -i identityserver4.templates
+2. dotnet new is4inmem ‑n GloboTicket.Services.Identity
+3. Add created project into solution
+4. Edit TestUsers.cs file in Quickstart folder -> change Subject ID with User ID from DB
+5. Modify Config.cs file
+   - Remove scope
+   - Remove Client Definitions
+6. Modify Startup.cs file
+   - Add method AddApiResouces()
+   - Remove Google Authentication
+7. Edit Project properties
+   - Launch as a project
+   - Not to launch browser
+   - Use HTTPS port 5010
+8. Run the solution, and check https://localhost:5010

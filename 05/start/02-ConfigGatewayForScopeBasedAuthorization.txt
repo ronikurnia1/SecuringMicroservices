@@ -1,0 +1,55 @@
+
+
+1. On GloboTicket.Gateway project,
+   - Modify appsetting.json file by adding the following config 
+     on "/shoppingbasket/api/baskets/{all}" and "/shoppingbasket/api/baskets" UpstreamPathTemplate:
+        "AllowedScopes": [ "eventcatalog.fullaccess" ]
+
+   - Modify appsetting.json file by adding the following config 
+     on "/eventcatalog/api/categories", "/eventcatalog/api/events",
+     "/eventcatalog/api/events/{id}", "/api/events/?categoryId={id}" UpstreamPathTemplate:
+
+         "AuthenticationOptions": {
+            "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme",
+            "AllowedScopes": [ "eventcatalog.fullaccess" ]
+          },
+ 
+
+    - Modify appsetting.json file by removing the following config from
+      "/shoppingbasket/api/baskets" and "/shoppingbasket/api/baskets/{all}",
+      UpstreamPathTemplate:
+
+          "AddHeadersToRequest": {
+            "CurrentUser": "Claims[sub] > value"
+          }
+
+2. On GloboTicket.Services.ShoppingBasket project,
+   - Modify CheckoutBasketAsync() method on BasketsController.cs file
+     by commeting out the following line of code:
+            var userId = Guid.Parse(HttpContext.Request.Headers["CurrentUser"][0]);
+     
+     and add new code:
+
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value);
+
+
+3. Put breakpoint on the above code and on the following line of code:
+  
+        var response = await client.GetAsync("api/events");
+   inside EventCatalogService.cs file GetAll() method on GloboTicket.Web project 
+
+4. Debug the app and check the token as well as the UserId see if it works (there is no "userId" available)
+5. Stop debuging and fix the issue by adding the following code on Startup.cs file inside 
+   ConfigureServices() method on GloboTicket.Web project:       
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+6. Debug again the app and do checkout and see if the "userId" is available now.
+
+7. Try different scenario by removing/commenting the following code from Startup.cs
+   file on GloboTicket.Web project:
+
+             //   options.Scope.Add("eventcatalog.fullaccess");
+
+8. Debug the app and check the token and see if it gets blocked by API Gateway 
+   (not by microservice) when accessing event catalog service
+

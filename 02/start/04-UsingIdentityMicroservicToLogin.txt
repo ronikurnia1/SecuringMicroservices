@@ -1,0 +1,94 @@
+
+
+1. Modify Config.cs file of GloboTicket.Services.Identity project
+   - Add Clients:
+                new Client
+                {
+                    ClientName = "GloboTicket Interactive Client",
+                    ClientId = "globoticketinteractive",
+                    ClientSecrets = { new Secret("ce766e16-df99-411d-8d31-0f5bbc6b8eba".Sha256()) },
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RedirectUris = { "https://localhost:5000/signin-oidc" },
+                    PostLogoutRedirectUris = { "https://localhost:5000/signout-callback-oidc" },
+                    AllowedScopes = { "openid", "profile" }
+                }
+
+2. On GloboTicket.Web project 
+   - Add package: Microsoft.AspNetCore.Authentication.OpenIdConnect v3.1.5
+
+   - On Startup.cs file add the following code on ConfigureServices method:
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            }).AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+            {
+                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.Authority = "https://localhost:5010/";
+                options.ClientId = "globoticketinteractive";
+                options.ResponseType = "code";
+                options.SaveTokens = true;
+                options.ClientSecret = "ce766e16-df99-411d-8d31-0f5bbc6b8eba";
+                options.GetClaimsFromUserInfoEndpoint = true;
+            });
+
+   - On Configure method of Startup.cs file add: 
+
+            app.UseAuthentication();
+
+   - On ConfigureServices method of Startup.cs file add:
+
+            var requireAuthenticatedUserPolicy = new AuthorizationPolicyBuilder()
+              .RequireAuthenticatedUser()
+              .Build();
+
+            var builder = services.AddControllersWithViews(options =>
+            {
+                options.Filters.Add(new AuthorizeFilter(requireAuthenticatedUserPolicy));
+            });
+
+
+3. Debug the solution and try to login (username: bob, password: bob)
+
+4. On GloboTicket.Web project, modify order variable inside Index method on OrderController.cs file:
+
+            var orders = await orderService.GetOrdersForUser(
+                Guid.Parse(
+                    User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value));
+
+
+5. On GloboTicket.Web project, replace line 115 of ShoppingBasketController.cs file with the following code:
+
+                        UserId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value)
+
+6. On GloboTicket.Web project, modify ShoppingBasketService.cs file inside Service folder:
+   - Add class variable:
+     
+             private readonly IHttpContextAccessor httpContextAccessor;
+
+   - Change its constructor:
+
+        public ShoppingBasketService(HttpClient client,
+            IHttpContextAccessor httpContextAccessor)
+        {
+            this.client = client;
+            this.httpContextAccessor = httpContextAccessor;
+        }
+
+   - On AddTobasket method replace the following code:
+     var basketResponse = await client.PostAsJson("/api/baskets", new BasketForCreation { UserId = settings.UserId });
+ 
+     with:
+                var basketResponse = await client.PostAsJson("/api/baskets", 
+                    new BasketForCreation { UserId =
+                    Guid.Parse(
+                        httpContextAccessor.HttpContext
+                        .User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value)
+                    });
+
+   - On Startup.cs file add the following code inside ConfigureServices method:
+     
+                 services.AddHttpContextAccessor();
+
+7. Remove line 8 of Settings.cs file inside Models folder

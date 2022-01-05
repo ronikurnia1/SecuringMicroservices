@@ -1,0 +1,149 @@
+
+
+1. Add new Folder: Gateway
+2. On that folder Add new empty ASP.NET Core project: GloboTicket.Gateway
+3. Set App URL on project properties to use https://localhost:5050/
+4. Add NuGet package Ocelot 16.0.1
+5. Modify the Startup.cs class body with the following code:
+   
+        public void ConfigureServices(IServiceCollection services)
+        {
+
+            services.AddOcelot();
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            await app.UseOcelot();       
+        }
+
+
+6. On appsettings.json file, add the following config:
+
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:5050"
+  },
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/categories",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/eventcatalog/api/categories",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/events",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/eventcatalog/api/events",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/events/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/eventcatalog/api/events/{id}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/events/?categoryId={id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/eventcatalog/api/events/?categoryId={id}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/baskets",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5002
+        }
+      ],
+      "UpstreamPathTemplate": "/shoppingbasket/api/baskets",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
+      },
+      "AddHeadersToRequest": {
+        "CurrentUser": "Claims[sub] > value"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/baskets/{all}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5002
+        }
+      ],
+      "UpstreamPathTemplate": "/shoppingbasket/api/baskets/{all}",
+      "UpstreamHttpMethod": [ "GET", "PUT", "POST", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
+      },
+      "AddHeadersToRequest": {
+        "CurrentUser": "Claims[sub] > value"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/order/{all}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5005
+        }
+      ],
+      "UpstreamPathTemplate": "/order/api/order/{all}",
+      "UpstreamHttpMethod": [ "GET" ]
+    }
+  ]
+
+7. On GloboTicket.Web project, modify the ApiConfigs on appsettings.Development.json file 
+   with the follwoing config:
+
+  "ApiConfigs": {
+    "EventCatalog": {
+      "Uri": "https://localhost:5050/eventcatalog/"
+    },
+    "ShoppingBasket": {
+      "Uri": "https://localhost:5002"
+    },
+    "Order": {
+      "Uri": "https://localhost:5005"
+    }   
+  }
+
+8. On On GloboTicket.Web project, modify EventCatalogService.cs file 
+   by replacing all url "/api" with "api"
+
+9. Debug the solution, see if the app can access event catalog

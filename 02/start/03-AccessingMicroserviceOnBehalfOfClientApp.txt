@@ -1,0 +1,67 @@
+
+
+
+1. Modify Config.cs file of GloboTicket.Services.Identity project
+   - Add ApiScopes:
+                     new ApiScope("globoticket.fullaccess")
+   
+   - Add ApiResources:
+              new ApiResource("globoticket", "GlobotTicket APIs")
+              {
+                  Scopes = { "globoticket.fullaccess" }
+              }
+
+   - Add Clients:
+                new Client
+                {
+                    ClientName = "GloboTicket Machine 2 Machine Client",
+                    ClientId = "globoticketm2m",
+                    ClientSecrets = { new Secret("eac7008f-1b35-4325-ac8d-4a71932e6088".Sha256()) },
+                    AllowedGrantTypes = GrantTypes.ClientCredentials,
+                    AllowedScopes = { "globoticket.fullaccess" }
+                }
+
+2. In GloboTicket.Web project
+   - Add package IdentityModel v4.4.0
+   - Modify EventCatalogService.cs file:
+     - Add class variable: private string _accessToken;
+
+     - Add new private method:
+        private async Task<string> GetToken()
+        {
+            if (!string.IsNullOrWhiteSpace(_accessToken))
+            {
+                return _accessToken;
+            }
+
+            var discoveryDocumentResponse = 
+                await client.GetDiscoveryDocumentAsync("https://localhost:5010/");
+            if (discoveryDocumentResponse.IsError)
+            {
+                throw new Exception(discoveryDocumentResponse.Error);
+            }
+
+            var tokenResponse =
+                await client.RequestClientCredentialsTokenAsync(
+                    new ClientCredentialsTokenRequest
+                    {
+                        Address = discoveryDocumentResponse.TokenEndpoint,
+                        ClientId = "globoticketm2m",
+                        ClientSecret = "eac7008f-1b35-4325-ac8d-4a71932e6088",
+                        Scope = "globoticket.fullaccess"
+                    });
+
+            if (tokenResponse.IsError)
+            {
+                throw new Exception(tokenResponse.Error);
+            }
+
+            _accessToken = tokenResponse.AccessToken;
+            return _accessToken;
+        }
+
+
+     - Add the following code into GetAll, GetByCategoryId, GetEvent and GetCategories methods:
+                client.SetBearerToken(await GetToken());
+
+

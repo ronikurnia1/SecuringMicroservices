@@ -1,0 +1,29 @@
+
+On GloboTicket.Service.EventCatalog
+
+1. Add package: Microsoft.AspNetCore.Authentication.JwtBearer v3.1.5
+2. Modify Startup.cs file
+   - add the following code inside ConfigureServices method: 
+   
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "https://localhost:5010";
+                    options.Audience = "globoticket";
+                });
+
+   - add the following code inside ConfigurationServices method:
+
+            var requireAuthenticatedUserPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+
+            services.AddControllers(configure =>
+            {
+                configure.Filters.Add(new AuthorizeFilter(requireAuthenticatedUserPolicy));
+            });
+
+   
+   - add the following code inside Configure method:
+
+            app.UseAuthentication();

@@ -1,0 +1,144 @@
+
+
+
+1. On GloboTicket.Gateway project,
+   - Add NuGet package IdentityModel v 4.4.0
+   - Create new folder called: DelegatingHandlers
+   - Create new class called TokenExchangeDelegatingHandler and
+     copy/paste the following code:
+
+        using IdentityModel.Client;
+        using System;
+        using System.Collections.Generic;
+        using System.Net.Http;
+        using System.Threading;
+        using System.Threading.Tasks;
+
+        namespace GloboTicket.Gateway.DelegatingHandlers
+        {
+            public class TokenExchangeDelegatingHandler : DelegatingHandler
+            {
+                private readonly IHttpClientFactory _httpClientFactory;
+
+                public TokenExchangeDelegatingHandler(IHttpClientFactory httpClientFactory)
+                {
+                    _httpClientFactory = httpClientFactory;
+                }
+
+
+                protected override async Task<HttpResponseMessage> SendAsync(
+                    HttpRequestMessage request, CancellationToken cancellationToken)
+                {
+                    // extract the current token
+                    var incomingToken = request.Headers.Authorization.Parameter;
+
+                    // exchange it
+                    var newToken = await ExchangeToken(incomingToken);
+
+                    // replace the incoming bearer token with our new one
+                    request.Headers.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", newToken);
+
+                    return await base.SendAsync(request, cancellationToken);
+                }
+
+                private async Task<string> ExchangeToken(string incomingToken)
+                {
+                    var client = _httpClientFactory.CreateClient();
+
+                    var discoveryDocumentResponse = await client
+                        .GetDiscoveryDocumentAsync("https://localhost:5010/");
+                    if (discoveryDocumentResponse.IsError)
+                    {
+                        throw new Exception(discoveryDocumentResponse.Error);
+                    }
+
+                    var customParams = new Dictionary<string, string>
+                    {
+                        { "subject_token_type", "urn:ietf:params:oauth:token-type:access_token"},
+                        { "subject_token", incomingToken},
+                        { "scope", "openid profile eventcatalog.fullaccess" }
+                    };
+
+                    var tokenResponse = await client.RequestTokenAsync(new TokenRequest()
+                    {
+                        Address = discoveryDocumentResponse.TokenEndpoint,
+                        GrantType = "urn:ietf:params:oauth:grant-type:token-exchange",
+                        Parameters = customParams,
+                        ClientId = "gatewaytodownstreamtokenexchangeclient",
+                        ClientSecret = "0cdea0bc-779e-4368-b46b-09956f70712c"
+                    });
+
+                    if (tokenResponse.IsError)
+                    {
+                        throw new Exception(tokenResponse.Error);
+                    }
+
+                    return tokenResponse.AccessToken;
+
+                }
+            }
+        }
+
+
+   - On Startup.cs file, inside ConfigureServices() method modify the folloing code:
+            services.AddOcelot();
+
+      with this one:
+
+            services.AddHttpClient();
+            services.AddScoped<TokenExchangeDelegatingHandler>();
+            services.AddOcelot()
+                .AddDelegatingHandler<TokenExchangeDelegatingHandler>();
+
+   - On appsettings.json file, on Routes that map to eventcatalog 
+     add the following config:
+
+      "DelegatingHandlers": [
+        "TokenExchangeDelegatingHandler"
+      ]
+
+
+
+2. On GloboTicket.Services.Identity project,
+   - On Config.cs file, add new Client with the following code:
+     
+                new Client
+                {
+                    ClientId = "gatewaytodownstreamtokenexchangeclient",
+                    ClientName = "Gateway to Downstream Token Exchange Client",
+                    AllowedGrantTypes = new[] { "urn:ietf:params:oauth:grant-type:token-exchange" },
+                    RequireConsent = false,
+                    ClientSecrets = { new Secret("0cdea0bc-779e-4368-b46b-09956f70712c".Sha256()) },
+                    AllowedScopes = {
+                         "openid", "profile", "eventcatalog.fullaccess" }
+                }
+
+   - On Config.cs file, modify the "GloboTicket Client" client with the following code:
+
+                new Client
+                {
+                    ClientName = "GloboTicket Client",
+                    ClientId = "globoticket",
+                    ClientSecrets = { new Secret("ce766e16-df99-411d-8d31-0f5bbc6b8eba".Sha256()) },
+                    AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
+                    RedirectUris = { "https://localhost:5000/signin-oidc" },
+                    PostLogoutRedirectUris = { "https://localhost:5000/signout-callback-oidc" },
+                    RequireConsent = false,
+                    AllowedScopes = { "openid", "profile",
+                         "globoticketgateway.fullaccess",
+                         "shoppingbasket.fullaccess" }
+                }
+
+     
+3. Put breakpoint on SendAsync() method inside TokenExchangeDelegatingHandler class
+
+
+4. Debug the app and login and see if it gets Forbidden result
+5. Check the log you should get "ScopeNotAuthorized" which is make sense.
+
+
+6. On GloboTicket.Gateway project,
+   - On appsettings.json file, remove all the AllowedScopes from the routes that map to eventcatalog 
+
+7. Debug the app and see if we get token only for eventcatalog
