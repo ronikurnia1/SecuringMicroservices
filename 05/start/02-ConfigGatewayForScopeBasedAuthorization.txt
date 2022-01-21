@@ -40,7 +40,7 @@
 
 4. Debug the app and check the token as well as the UserId see if it works (there is no "userId" available)
 5. Stop debuging and fix the issue by adding the following code on Startup.cs file inside 
-   ConfigureServices() method on GloboTicket.Web project:       
+   ConfigureServices() method on GloboTicket.Services.ShoppingBasket project:       
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 6. Debug again the app and do checkout and see if the "userId" is available now.
