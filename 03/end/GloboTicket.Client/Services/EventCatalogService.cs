@@ -1,7 +1,6 @@
 ﻿using GloboTicket.Web.Extensions;
 using GloboTicket.Web.Models.Api;
 using IdentityModel.Client;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -38,9 +37,9 @@ namespace GloboTicket.Web.Services
                     new ClientCredentialsTokenRequest
                     {
                         Address = discoveryDocumentResponse.TokenEndpoint,
-                        ClientId = "globoticket", //"globoticketm2m",
-                        ClientSecret = "ce766e16-df99-411d-8d31-0f5bbc6b8eba",  //"eac7008f-1b35-4325-ac8d-4a71932e6088",
-                        Scope = "eventcatalog.read eventcatalog.write"
+                        ClientId = "globoticket", 
+                        ClientSecret = "ce766e16-df99-411d-8d31-0f5bbc6b8eba", //"eac7008f-1b35-4325-ac8d-4a71932e6088",
+                        Scope = "eventcatalog.read"
                     });
 
             if (tokenResponse.IsError)

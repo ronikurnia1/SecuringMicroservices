@@ -1,4 +1,3 @@
-using AutoMapper;
 using GloboTicket.Services.Discount.DbContexts;
 using GloboTicket.Services.Discount.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -43,11 +42,6 @@ namespace GloboTicket.Services.Discount
                     requireAuthenticatedUserPolicy));
             });
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { 
-                    Title = "Discount API", Version = "v1" });
-            });
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
               .AddJwtBearer(options =>
@@ -55,6 +49,16 @@ namespace GloboTicket.Services.Discount
                   options.Authority = "https://localhost:5010";
                   options.Audience = "discount";
               });
+
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Discount API",
+                    Version = "v1"
+                });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

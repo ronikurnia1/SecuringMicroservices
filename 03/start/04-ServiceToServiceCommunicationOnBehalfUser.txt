@@ -13,8 +13,6 @@
                     requireAuthenticatedUserPolicy));
             });
 
-   - Modify Startup.cs file by adding the following code inside ConfigureServices method:
-
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
               .AddJwtBearer(options =>
               {
@@ -60,7 +58,7 @@
 4. Run the solution and test to checkout and see if the breakpoint being hit with an error 401
 
 5. On GloboTicket.Services.ShoppingBasket project
-   - Add package IdentityModel v.4.4.0
+   - Add package IdentityModel
 
    - Replace DiscountService.cs file with the following code:
 
@@ -102,12 +100,10 @@
                         throw new Exception(discoveryDocumentResponse.Error);
                     }
 
-                    var customParams = new Dictionary<string, string>
-                    {
-                        { "subject_token_type", "urn:ietf:params:oauth:token-type:access_token"},
-                        { "subject_token", await httpContextAccessor.HttpContext.GetTokenAsync("access_token")},
-                        { "scope", "openid profile discount.fullaccess" }
-                    };
+                    var customParams = new Parameters(new List<KeyValuePair<string, string>> {
+                        new KeyValuePair<string, string>("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+                        new KeyValuePair<string, string>("subject_token", await httpContextAccessor.HttpContext.GetTokenAsync("access_token")),
+                        new KeyValuePair<string, string>("scope", "openid profile discount.fullaccess") });
 
                     var tokenResponse = await client.RequestTokenAsync(new TokenRequest()
                     {

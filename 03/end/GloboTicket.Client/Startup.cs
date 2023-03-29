@@ -40,13 +40,13 @@ namespace GloboTicket.Web
             if (environment.IsDevelopment())
                 builder.AddRazorRuntimeCompilation();
 
-            services.AddHttpClient<IEventCatalogService, EventCatalogService>(c => 
+            services.AddHttpClient<IEventCatalogService, EventCatalogService>(c =>
                 c.BaseAddress = new Uri(config["ApiConfigs:EventCatalog:Uri"]));
-            services.AddHttpClient<IShoppingBasketService, ShoppingBasketService>(c => 
+            services.AddHttpClient<IShoppingBasketService, ShoppingBasketService>(c =>
                 c.BaseAddress = new Uri(config["ApiConfigs:ShoppingBasket:Uri"]));
             services.AddHttpClient<IOrderService, OrderService>(c =>
                 c.BaseAddress = new Uri(config["ApiConfigs:Order:Uri"]));
-        
+
             services.AddSingleton<Settings>();
 
             services.AddAuthentication(options =>

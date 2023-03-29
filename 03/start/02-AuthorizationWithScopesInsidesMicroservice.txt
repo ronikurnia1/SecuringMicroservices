@@ -45,3 +45,8 @@
                         policy => policy.RequireClaim("scope", "eventcatalog.write"));
 
 7. Run the solution, see if you can access event catalog 
+
+8. To simulate, try to change the scope of the above "CanRead" policy with the following code: 
+                        policy => policy.RequireClaim("scope", "eventcatalog.read", "eventcatalog.write"));
+
+9. Run the solution, see if you can access event catalog

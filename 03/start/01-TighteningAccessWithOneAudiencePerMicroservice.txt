@@ -85,7 +85,7 @@
 
                         Scope = "globoticket.fullaccess"
      with:
-                        Scope = "shoppingbasket.fullaccess"
+                        Scope = "eventcatalog.fullaccess"
 
 
 5. Run and try the solution (this time not using global audience)
@@ -105,8 +105,7 @@
                     AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
                     RedirectUris = { "https://localhost:5000/signin-oidc" },
                     PostLogoutRedirectUris = { "https://localhost:5000/signout-callback-oidc" },
-                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess",
-                    "eventcatalog.fullaccess" }
+                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess", "eventcatalog.fullaccess" }
                 },
 
 
@@ -132,7 +131,7 @@
                         Address = discoveryDocumentResponse.TokenEndpoint,
                         ClientId = "globoticketm2m",
                         ClientSecret = "eac7008f-1b35-4325-ac8d-4a71932e6088",
-                        Scope = "globoticket.fullaccess"
+                        Scope = "eventcatalog.fullaccess"
                     });
 
      with:

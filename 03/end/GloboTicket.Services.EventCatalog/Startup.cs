@@ -63,7 +63,7 @@ namespace GloboTicket.Services.EventCatalog
                 {
                     options.AddPolicy(
                         "CanRead",
-                        policy => policy.RequireClaim("scope", "eventcatalog.write", "eventcatalog.read"));
+                        policy => policy.RequireClaim("scope", "eventcatalog.read", "eventcatalog.write"));
                 });
         }
 

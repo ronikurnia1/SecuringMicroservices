@@ -1,7 +1,6 @@
 ﻿using GloboTicket.Web.Extensions;
 using GloboTicket.Web.Models.Api;
 using IdentityModel.Client;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;

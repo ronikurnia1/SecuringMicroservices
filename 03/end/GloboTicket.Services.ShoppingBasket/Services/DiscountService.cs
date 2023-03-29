@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace GloboTicket.Services.ShoppingBasket.Services
 {
-    public class DiscountService: IDiscountService
+    public class DiscountService : IDiscountService
     {
         private readonly HttpClient client;
         private readonly IHttpContextAccessor httpContextAccessor;
@@ -36,12 +36,10 @@ namespace GloboTicket.Services.ShoppingBasket.Services
                 throw new Exception(discoveryDocumentResponse.Error);
             }
 
-            var customParams = new Dictionary<string, string>
-            {
-                { "subject_token_type", "urn:ietf:params:oauth:token-type:access_token"},
-                { "subject_token", await httpContextAccessor.HttpContext.GetTokenAsync("access_token")},
-                { "scope", "openid profile discount.fullaccess" }
-            };
+            var customParams = new Parameters(new List<KeyValuePair<string, string>> {
+                        new KeyValuePair<string, string>("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+                        new KeyValuePair<string, string>("subject_token", await httpContextAccessor.HttpContext.GetTokenAsync("access_token")),
+                        new KeyValuePair<string, string>("scope", "openid profile discount.fullaccess") });
 
             var tokenResponse = await client.RequestTokenAsync(new TokenRequest()
             {

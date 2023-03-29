@@ -69,11 +69,10 @@ namespace GloboTicket.Services.Identity
                     ClientName = "GloboTicket Client",
                     ClientId = "globoticket",
                     ClientSecrets = { new Secret("ce766e16-df99-411d-8d31-0f5bbc6b8eba".Sha256()) },
-                    AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
+                    AllowedGrantTypes = GrantTypes.CodeAndClientCredentials, //Combine
                     RedirectUris = { "https://localhost:5000/signin-oidc" },
                     PostLogoutRedirectUris = { "https://localhost:5000/signout-callback-oidc" },
-                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess",
-                    "eventcatalog.read", "eventcatalog.write" }
+                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess", "eventcatalog.read", "eventcatalog.write" }
                 },
                 new Client
                 {
@@ -83,8 +82,7 @@ namespace GloboTicket.Services.Identity
                     ClientSecrets = { new Secret("0cdea0bc-779e-4368-b46b-09956f70712c".Sha256()) },
                     AllowedScopes = {
                          "openid", "profile", "discount.fullaccess" }
-                },
-
+                }
             };
     }
 }
