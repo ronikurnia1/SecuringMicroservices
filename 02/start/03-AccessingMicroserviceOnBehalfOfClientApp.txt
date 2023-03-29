@@ -22,7 +22,7 @@
                 }
 
 2. In GloboTicket.Web project
-   - Add package IdentityModel v4.4.0
+   - Add package IdentityModel 
    - Modify EventCatalogService.cs file:
      - Add class variable: private string _accessToken;
 

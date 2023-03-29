@@ -14,7 +14,7 @@
                 }
 
 2. On GloboTicket.Web project 
-   - Add package: Microsoft.AspNetCore.Authentication.OpenIdConnect v3.1.5
+   - Add package: Microsoft.AspNetCore.Authentication.OpenIdConnect 
 
    - On Startup.cs file add the following code on ConfigureServices method:
             services.AddAuthentication(options =>
