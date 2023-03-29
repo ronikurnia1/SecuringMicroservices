@@ -103,7 +103,6 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
                 Coupon coupon = null;
                  
                 //var userId = basketCheckout.UserId;
-
                 var userId = Guid.Parse(HttpContext.Request.Headers["CurrentUser"][0]);
 
                 if (!(userId == Guid.Empty))

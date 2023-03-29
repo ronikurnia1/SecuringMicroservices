@@ -83,7 +83,9 @@ namespace GloboTicket.Services.Identity
                     RedirectUris = { "https://localhost:5000/signin-oidc" },
                     PostLogoutRedirectUris = { "https://localhost:5000/signout-callback-oidc" },
                     RequireConsent = false,
-                    AllowedScopes = { "openid", "profile", "shoppingbasket.fullaccess", "eventcatalog.read", "eventcatalog.write" }
+                    AllowedScopes = { "openid", "profile", 
+                         "shoppingbasket.fullaccess", 
+                         "eventcatalog.read", "eventcatalog.write" }
                 }
 
 

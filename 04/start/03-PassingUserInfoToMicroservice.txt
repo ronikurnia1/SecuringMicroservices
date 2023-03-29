@@ -12,7 +12,7 @@
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 2. On GloboTicket.Services.ShoppingBasket project,
-   - On BasketsController.cs file CheckoutBasketAsync() method, comment the follwoing code:
+   - On BasketsController.cs file CheckoutBasketAsync() method, comment out the follwoing code:
             var userId = basketCheckout.UserId;
      
      and then add the following code:

@@ -3,7 +3,7 @@
 1. Add new Folder: Gateway
 2. On that folder Add new empty ASP.NET Core project: GloboTicket.Gateway
 3. Set App URL on project properties to use https://localhost:5050/
-4. Add NuGet package Ocelot 16.0.1
+4. Add NuGet package Ocelot
 5. Modify the Startup.cs class body with the following code:
    
         public void ConfigureServices(IServiceCollection services)
@@ -88,13 +88,7 @@
         }
       ],
       "UpstreamPathTemplate": "/shoppingbasket/api/baskets",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
-      },
-      "AddHeadersToRequest": {
-        "CurrentUser": "Claims[sub] > value"
-      }
+      "UpstreamHttpMethod": [ "POST" ]
     },
     {
       "DownstreamPathTemplate": "/api/baskets/{all}",
@@ -106,13 +100,7 @@
         }
       ],
       "UpstreamPathTemplate": "/shoppingbasket/api/baskets/{all}",
-      "UpstreamHttpMethod": [ "GET", "PUT", "POST", "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
-      },
-      "AddHeadersToRequest": {
-        "CurrentUser": "Claims[sub] > value"
-      }
+      "UpstreamHttpMethod": [ "GET", "PUT", "POST", "DELETE" ]
     },
     {
       "DownstreamPathTemplate": "/api/order/{all}",

@@ -1,7 +1,7 @@
 
 
 1. On GloboTicket.Gateway project
-   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer v 3.1.5
+   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer
    - On ConfigureServices() method on Startup.cs file add the following code before services.AddOcelot():
      
             var authenticationScheme = "GloboTicketGatewayAuthenticationScheme";
@@ -13,8 +13,14 @@
                        options.Audience = "globoticketgateway";
                    });
 
+   - On Configure() method on Startup.cs file add the following code:
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+
    - Edit appsettings.json file by adding the follwoing code 
-     inside "/api/baskets/{all}" DownstreamPathTemplate configuration:
+     same level of "DownstreamPathTemplate": "/api/baskets/{all}" configuration:
      
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
@@ -22,7 +28,7 @@
 
      
    - Edit appsettings.json file by adding the follwoing code 
-     inside "/api/baskets" DownstreamPathTemplate configuration:
+     same level of "DownstreamPathTemplate": "/api/baskets" configuration:
      
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "GloboTicketGatewayAuthenticationScheme"
