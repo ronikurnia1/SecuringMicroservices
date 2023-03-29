@@ -35,9 +35,7 @@ namespace GloboTicket.Gateway
                    });
 
             services.AddHttpClient();
-
             services.AddScoped<TokenExchangeDelegatingHandler>();
-
             services.AddOcelot()
                 .AddDelegatingHandler<TokenExchangeDelegatingHandler>();
         }

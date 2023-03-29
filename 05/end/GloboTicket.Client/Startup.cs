@@ -64,7 +64,6 @@ namespace GloboTicket.Web
                 options.ClientSecret = "ce766e16-df99-411d-8d31-0f5bbc6b8eba";
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.Scope.Add("shoppingbasket.fullaccess");
-             //   options.Scope.Add("eventcatalog.fullaccess");
                 options.Scope.Add("globoticketgateway.fullaccess");
             });
 

@@ -2,7 +2,8 @@
 
 1. On GloboTicket.Gateway project,
    - Modify appsetting.json file by adding the following config 
-     on "/shoppingbasket/api/baskets/{all}" and "/shoppingbasket/api/baskets" UpstreamPathTemplate:
+     on "/shoppingbasket/api/baskets/{all}" and "/shoppingbasket/api/baskets" UpstreamPathTemplate 
+     inside AuthenticationOptions:
         "AllowedScopes": [ "eventcatalog.fullaccess" ]
 
    - Modify appsetting.json file by adding the following config 
@@ -35,10 +36,11 @@
 
 3. Put breakpoint on the above code and on the following line of code:
   
-        var response = await client.GetAsync("api/events");
+   var response = await client.GetAsync("api/events");
    inside EventCatalogService.cs file GetAll() method on GloboTicket.Web project 
 
 4. Debug the app and check the token as well as the UserId see if it works (there is no "userId" available)
+
 5. Stop debuging and fix the issue by adding the following code on Startup.cs file inside 
    ConfigureServices() method on GloboTicket.Services.ShoppingBasket project:       
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();

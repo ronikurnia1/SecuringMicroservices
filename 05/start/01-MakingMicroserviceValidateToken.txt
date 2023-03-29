@@ -1,7 +1,7 @@
 
 
 1. On GloboTicket.Services.EventCatalog project
-   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer v 3.1.5
+   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer 
    - On Startup.cs file inside ConfigureServices() method 
      add the following code:
 
@@ -32,7 +32,7 @@
             app.UseAuthentication();
 
 2. Do the exact same things on GloboTicket.Services.ShoppingBasket project
-   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer v 3.1.5
+   - Add NuGet package Microsoft.AspNetCore.Authentication.JwtBearer
    - On Startup.cs file inside ConfigureServices() method 
      add the following code:
 

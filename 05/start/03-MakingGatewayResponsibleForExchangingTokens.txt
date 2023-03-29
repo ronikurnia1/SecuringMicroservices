@@ -2,7 +2,7 @@
 
 
 1. On GloboTicket.Gateway project,
-   - Add NuGet package IdentityModel v 4.4.0
+   - Add NuGet package IdentityModel 
    - Create new folder called: DelegatingHandlers
    - Create new class called TokenExchangeDelegatingHandler and
      copy/paste the following code:
@@ -53,12 +53,12 @@
                         throw new Exception(discoveryDocumentResponse.Error);
                     }
 
-                    var customParams = new Dictionary<string, string>
+                    var customParams = new Parameters(new List<KeyValuePair<string, string>>
                     {
-                        { "subject_token_type", "urn:ietf:params:oauth:token-type:access_token"},
-                        { "subject_token", incomingToken},
-                        { "scope", "openid profile eventcatalog.fullaccess" }
-                    };
+                        new KeyValuePair<string, string> ("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+                        new KeyValuePair<string, string>("subject_token", incomingToken),
+                        new KeyValuePair<string, string>("scope", "openid profile eventcatalog.fullaccess" )
+                    });
 
                     var tokenResponse = await client.RequestTokenAsync(new TokenRequest()
                     {

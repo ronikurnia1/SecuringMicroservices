@@ -41,7 +41,6 @@ namespace GloboTicket.Services.ShoppingBasket
                       options.Audience = "shoppingbasket";
                   });
 
-
             var requireAuthenticatedUserPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .Build();

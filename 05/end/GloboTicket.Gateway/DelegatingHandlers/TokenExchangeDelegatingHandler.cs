@@ -27,7 +27,7 @@ namespace GloboTicket.Gateway.DelegatingHandlers
             var newToken = await ExchangeToken(incomingToken);
 
             // replace the incoming bearer token with our new one
-            request.Headers.Authorization = 
+            request.Headers.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", newToken);
 
             return await base.SendAsync(request, cancellationToken);
@@ -44,12 +44,12 @@ namespace GloboTicket.Gateway.DelegatingHandlers
                 throw new Exception(discoveryDocumentResponse.Error);
             }
 
-            var customParams = new Dictionary<string, string>
+            var customParams = new Parameters(new List<KeyValuePair<string, string>>
             {
-                { "subject_token_type", "urn:ietf:params:oauth:token-type:access_token"},
-                { "subject_token", incomingToken},
-                { "scope", "openid profile eventcatalog.fullaccess" }
-            };
+                new KeyValuePair<string, string> ("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+                new KeyValuePair<string, string>("subject_token", incomingToken),
+                new KeyValuePair<string, string>("scope", "openid profile eventcatalog.fullaccess" )
+            });
 
             var tokenResponse = await client.RequestTokenAsync(new TokenRequest()
             {

@@ -22,7 +22,6 @@ namespace GloboTicket.Web.Services
             this.httpContextAccessor = httpContextAccessor;
         }
 
-
         public async Task<IEnumerable<Event>> GetAll()
         {
             client.SetBearerToken(await httpContextAccessor.HttpContext.GetTokenAsync("access_token"));
@@ -50,6 +49,5 @@ namespace GloboTicket.Web.Services
             var response = await client.GetAsync("api/categories");
             return await response.ReadContentAs<List<Category>>();
         }
-
     }
 }
