@@ -4,7 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -20,8 +19,7 @@ namespace GloboTicket.Services.Ordering.Helpers
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<bool> ValidateTokenAsync(string tokenToValidate, 
-            DateTime receivedAt)
+        public async Task<bool> ValidateTokenAsync(string tokenToValidate, DateTime receivedAt)
         {
             var client = _httpClientFactory.CreateClient();
 

@@ -2,7 +2,6 @@
 using IdentityModel.Client;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,8 +23,12 @@ namespace GloboTicket.Gateway.DelegatingHandlers
 
         public async Task<string> GetAccessToken(string incomingToken)
         {
-            var item = await _clientAccessTokenCache
-                .GetAsync("gatewaytodownstreamtokenexchangeclient_eventcatalog");
+            var param = new ClientAccessTokenParameters()
+            {
+                ForceRenewal = true
+            };
+
+            var item = await _clientAccessTokenCache.GetAsync("gatewaytodownstreamtokenexchangeclient_eventcatalog", param);
             if (item != null)
             {
                 return item.AccessToken;
@@ -33,10 +36,7 @@ namespace GloboTicket.Gateway.DelegatingHandlers
 
             var (accessToken, expiresIn) = await ExchangeToken(incomingToken);
 
-            await _clientAccessTokenCache.SetAsync(
-                "gatewaytodownstreamtokenexchangeclient_eventcatalog",
-                accessToken,
-                expiresIn);
+            await _clientAccessTokenCache.SetAsync("gatewaytodownstreamtokenexchangeclient_eventcatalog", accessToken, expiresIn, param);
 
             return accessToken;
         }
@@ -76,12 +76,12 @@ namespace GloboTicket.Gateway.DelegatingHandlers
                 throw new Exception(discoveryDocumentResponse.Error);
             }
 
-            var customParams = new Dictionary<string, string>
-            {
-                { "subject_token_type", "urn:ietf:params:oauth:token-type:access_token"},
-                { "subject_token", incomingToken},
-                { "scope", "openid profile eventcatalog.fullaccess" }
-            };
+            var customParams = new Parameters(new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+                    new KeyValuePair<string, string>("subject_token", incomingToken),
+                    new KeyValuePair<string, string>("scope", "openid profile eventcatalog.fullaccess")
+                });
 
             var tokenResponse = await client.RequestTokenAsync(new TokenRequest()
             {

@@ -1,37 +1,34 @@
-﻿using GloboTicket.Integration.MessagingBus;
+﻿using Azure.Messaging.ServiceBus;
+using GloboTicket.Integration.MessagingBus;
 using GloboTicket.Services.Ordering.Entities;
 using GloboTicket.Services.Ordering.Helpers;
 using GloboTicket.Services.Ordering.Messages;
 using GloboTicket.Services.Ordering.Repositories;
-using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.ServiceBus.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace GloboTicket.Services.Ordering.Messaging
 {
-    public class AzServiceBusConsumer: IAzServiceBusConsumer
+    public class AzServiceBusConsumer : IAzServiceBusConsumer
     {
         private readonly string subscriptionName = "globoticketorder";
-        private readonly IReceiverClient checkoutMessageReceiverClient;
 
         private readonly IConfiguration _configuration;
 
         private readonly OrderRepository _orderRepository;
-        private readonly IServiceScopeFactory _scopeFactory;
         private readonly IMessageBus _messageBus;
+        private readonly ServiceBusProcessor _serviceBusProcessor;
 
         private readonly string checkoutMessageTopic;
 
-        public AzServiceBusConsumer(IConfiguration configuration, 
-            IMessageBus messageBus, 
-            OrderRepository orderRepository,
-            IServiceScopeFactory scopeFactory)
+        private readonly IServiceScopeFactory _scopeFactory;
+
+        public AzServiceBusConsumer(IConfiguration configuration, IMessageBus messageBus, 
+            OrderRepository orderRepository, IServiceScopeFactory scopeFactory)
         {
             _configuration = configuration;
             _orderRepository = orderRepository;
@@ -40,26 +37,27 @@ namespace GloboTicket.Services.Ordering.Messaging
             _messageBus = messageBus;
 
             var serviceBusConnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
+            var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
+
             checkoutMessageTopic = _configuration.GetValue<string>("CheckoutMessageTopic");
 
-            checkoutMessageReceiverClient = new SubscriptionClient(serviceBusConnectionString, checkoutMessageTopic, subscriptionName);
+            _serviceBusProcessor = serviceBusClient.CreateProcessor(checkoutMessageTopic, subscriptionName);
         }
 
         public void Start()
         {
-            var messageHandlerOptions = new MessageHandlerOptions(OnServiceBusException) { MaxConcurrentCalls = 4 };
+            _serviceBusProcessor.ProcessMessageAsync += MessageHandler;
+            _serviceBusProcessor.ProcessErrorAsync += ErrorHandler;
 
-            checkoutMessageReceiverClient.RegisterMessageHandler(OnCheckoutMessageReceived, messageHandlerOptions);
+            _serviceBusProcessor.StartProcessingAsync();
         }
 
-        private async Task OnCheckoutMessageReceived(Message message, 
-            CancellationToken arg2)
+        private async Task MessageHandler(ProcessMessageEventArgs args)
         {
-            var body = Encoding.UTF8.GetString(message.Body);//json from service bus
+            var body = Encoding.UTF8.GetString(args.Message.Body);//json from service bus
 
             // Save order with status "not paid"
-            BasketCheckoutMessage basketCheckoutMessage =
-                JsonConvert.DeserializeObject<BasketCheckoutMessage>(body);
+            BasketCheckoutMessage basketCheckoutMessage = JsonConvert.DeserializeObject<BasketCheckoutMessage>(body);
 
             using (var scope = _scopeFactory.CreateScope())
             {
@@ -68,7 +66,7 @@ namespace GloboTicket.Services.Ordering.Messaging
 
                 if (!await tokenValidationService.ValidateTokenAsync(
                         basketCheckoutMessage.SecurityContext.AccessToken,
-                        message.SystemProperties.EnqueuedTimeUtc))
+                        args.Message.EnqueuedTime.UtcDateTime))
                 {
                     // log, cleanup, ... but don't throw an exception as that will result
                     // in the message not being regarded as handled.  
@@ -93,15 +91,18 @@ namespace GloboTicket.Services.Ordering.Messaging
             // Functionality not included in demo on purpose.  
         }
 
-        private Task OnServiceBusException(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
+        private Task ErrorHandler(ProcessErrorEventArgs args)
         {
-            Console.WriteLine(exceptionReceivedEventArgs);
+            Console.WriteLine(args.Exception.ToString());
 
             return Task.CompletedTask;
         }
 
         public void Stop()
         {
+            _serviceBusProcessor.StopProcessingAsync();
+            _serviceBusProcessor.ProcessMessageAsync -= MessageHandler;
+            _serviceBusProcessor.ProcessErrorAsync -= ErrorHandler;
         }
     }
 }

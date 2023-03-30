@@ -1,12 +1,10 @@
 ﻿using GloboTicket.Web.Extensions;
 using GloboTicket.Web.Models.Api;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using IdentityModel.Client;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authentication;
 
 namespace GloboTicket.Web.Services
 {

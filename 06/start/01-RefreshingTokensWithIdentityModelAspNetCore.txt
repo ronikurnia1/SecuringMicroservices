@@ -11,7 +11,7 @@
     Note: 60 seconds this is not for production!
 
 2. On GloboTicket.Web project,
-   - Add NuGet package IdentityModel.AspNetCore v 2.0.0
+   - Add NuGet package IdentityModel.AspNetCore
    - On Startup.cs file, add the following code inside the AddOpenIdConnect() method:
 
                 options.Scope.Add("offline_access");

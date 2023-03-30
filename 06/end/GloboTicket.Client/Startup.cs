@@ -43,9 +43,11 @@ namespace GloboTicket.Web
             services.AddHttpClient<IEventCatalogService, EventCatalogService>(c => 
                 c.BaseAddress = new Uri(config["ApiConfigs:EventCatalog:Uri"]))
                 .AddUserAccessTokenHandler();
+
             services.AddHttpClient<IShoppingBasketService, ShoppingBasketService>(c => 
                 c.BaseAddress = new Uri(config["ApiConfigs:ShoppingBasket:Uri"]))
                 .AddUserAccessTokenHandler();
+
             services.AddHttpClient<IOrderService, OrderService>(c =>
                 c.BaseAddress = new Uri(config["ApiConfigs:Order:Uri"]))
                 .AddUserAccessTokenHandler();
@@ -69,7 +71,6 @@ namespace GloboTicket.Web
                 options.ClientSecret = "ce766e16-df99-411d-8d31-0f5bbc6b8eba";
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.Scope.Add("shoppingbasket.fullaccess");
-             //   options.Scope.Add("eventcatalog.fullaccess");
                 options.Scope.Add("globoticketgateway.fullaccess");
                 options.Scope.Add("offline_access");
             });

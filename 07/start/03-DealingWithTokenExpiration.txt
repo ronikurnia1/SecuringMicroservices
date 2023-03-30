@@ -1,7 +1,7 @@
 
 
 1. On GloboTicket.Services.Ordering project,
-   - On AzServiceBusConsumer.cs file, inside OnCheckoutMessageReceived() method replace
+   - On AzServiceBusConsumer.cs file, inside MessageHandler() method replace
      the following code:
 
                 if (!await tokenValidationService.ValidateTokenAsync(
@@ -16,7 +16,7 @@
      
                 if (!await tokenValidationService.ValidateTokenAsync(
                         basketCheckoutMessage.SecurityContext.AccessToken,
-                        message.SystemProperties.EnqueuedTimeUtc))
+                        args.Message.EnqueuedTime.UtcDateTime))
                 {
                     // log, cleanup, ... but don't throw an exception as that will result
                     // in the message not being regarded as handled.  

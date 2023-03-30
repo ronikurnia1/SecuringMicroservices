@@ -21,85 +21,84 @@
 
 
 3. On GloboTicket.Services.Ordering project,
-   - Add NuGet package IdentityModel v 4.4.0
+   - Add NuGet package IdentityModel
    - Add new folder called "Helpers"
    - Add new class called "TokenValidationService" and copy/paste the following code:
 
-        using IdentityModel;
-        using IdentityModel.Client;
-        using Microsoft.IdentityModel.Tokens;
-        using System;
-        using System.Collections.Generic;
-        using System.IdentityModel.Tokens.Jwt;
-        using System.Linq;
-        using System.Net.Http;
-        using System.Security.Cryptography;
-        using System.Threading.Tasks;
+using IdentityModel;
+using IdentityModel.Client;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 
-        namespace GloboTicket.Services.Ordering.Helpers
+namespace GloboTicket.Services.Ordering.Helpers
+{
+    public class TokenValidationService
+    {
+        private readonly IHttpClientFactory _httpClientFactory;
+
+        public TokenValidationService(IHttpClientFactory httpClientFactory)
         {
-            public class TokenValidationService
+            _httpClientFactory = httpClientFactory;
+        }
+
+        public async Task<bool> ValidateTokenAsync(string tokenToValidate)
+        {
+            var client = _httpClientFactory.CreateClient();
+
+            var discoveryDocumentResponse = await client
+                .GetDiscoveryDocumentAsync("https://localhost:5010");
+            if (discoveryDocumentResponse.IsError)
             {
-                private readonly IHttpClientFactory _httpClientFactory;
+                throw new Exception(discoveryDocumentResponse.Error);
+            }
 
-                public TokenValidationService(IHttpClientFactory httpClientFactory)
+            try
+            {
+
+                var issuerSigningKeys = new List<SecurityKey>();
+                foreach (var webKey in discoveryDocumentResponse.KeySet.Keys)
                 {
-                    _httpClientFactory = httpClientFactory;
+                    var e = Base64Url.Decode(webKey.E);
+                    var n = Base64Url.Decode(webKey.N);
+
+                    var key = new RsaSecurityKey(new RSAParameters
+                    { Exponent = e, Modulus = n })
+                    {
+                        KeyId = webKey.Kid
+                    };
+
+                    issuerSigningKeys.Add(key);
                 }
 
-                public async Task<bool> ValidateTokenAsync(string tokenToValidate)
+                var tokenValidationParameters = new TokenValidationParameters()
                 {
-                    var client = _httpClientFactory.CreateClient();
+                    ValidAudience = "ordering",
+                    ValidIssuer = "https://localhost:5010",
+                    IssuerSigningKeys = issuerSigningKeys
+                };
 
-                    var discoveryDocumentResponse = await client
-                        .GetDiscoveryDocumentAsync("https://localhost:5010");
-                    if (discoveryDocumentResponse.IsError)
-                    {
-                        throw new Exception(discoveryDocumentResponse.Error);
-                    }
+                _ = new JwtSecurityTokenHandler().ValidateToken(tokenToValidate,
+                    tokenValidationParameters, out var rawValidatedToken);
 
-                    try
-                    {
-
-                        var issuerSigningKeys = new List<SecurityKey>();
-                        foreach (var webKey in discoveryDocumentResponse.KeySet.Keys)
-                        {
-                            var e = Base64Url.Decode(webKey.E);
-                            var n = Base64Url.Decode(webKey.N);
-
-                            var key = new RsaSecurityKey(new RSAParameters
-                            { Exponent = e, Modulus = n })
-                            {
-                                KeyId = webKey.Kid
-                            };
-
-                            issuerSigningKeys.Add(key);
-                        }
-
-                        var tokenValidationParameters = new TokenValidationParameters()
-                        {
-                            ValidAudience = "ordering",
-                            ValidIssuer = "https://localhost:5010",
-                            IssuerSigningKeys = issuerSigningKeys
-                        };
-
-                        _ = new JwtSecurityTokenHandler().ValidateToken(tokenToValidate,
-                            tokenValidationParameters, out var rawValidatedToken);
-
-                        return true;
-                    }
-                    catch (SecurityTokenValidationException)
-                    {
-                        // Validation failed - log this if needed
-                        return false;
-                    }
-                    catch (Exception)
-                    {
-                        return false;
-                    }
-                }
+                return true;
+            }
+            catch (SecurityTokenValidationException)
+            {
+                // Validation failed - log this if needed
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
+    }
+}
 
    - On Startup.cs file, add the folowing code inside ConfigureServices() method:
 
@@ -125,11 +124,11 @@
             var serviceBusConnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
             checkoutMessageTopic = _configuration.GetValue<string>("CheckoutMessageTopic");
 
-            checkoutMessageReceiverClient = new SubscriptionClient(serviceBusConnectionString, checkoutMessageTopic, subscriptionName);
+            _serviceBusProcessor = serviceBusClient.CreateProcessor(checkoutMessageTopic, subscriptionName);
         }
 
 
-   - On AzServiceBusConsumer.cs file, inside OnCheckoutMessageReceived() method right after the following code:
+   - On AzServiceBusConsumer.cs file, inside MessageHandler() method right after the following code:
 
             // Save order with status "not paid"
             BasketCheckoutMessage basketCheckoutMessage = JsonConvert.DeserializeObject<BasketCheckoutMessage>(body);
@@ -152,6 +151,7 @@
 
 4. Put breakpoint on ValidateTokenAsync() method and the following line of code:
         var orderId = Guid.NewGuid();
+        on MessageHandler() method of AzServiceBusConsumer.cs file
 
 5. Debug the app, do login add ticket and checkout see if it hits ValidateTokenAsync() method 
    as well as the second breakpoint

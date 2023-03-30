@@ -127,8 +127,7 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
 
                 var incomingToken = await HttpContext.GetTokenAsync("access_token");
                 var accessTokenForOrderingService = await tokenExchangeService.GetTokenAsync(
-                    incomingToken,
-                    "ordering.fullaccess");
+                    incomingToken, "ordering.fullaccess");
 
                 basketCheckoutMessage.SecurityContext.AccessToken = accessTokenForOrderingService;
 

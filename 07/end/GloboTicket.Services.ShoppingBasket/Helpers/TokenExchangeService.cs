@@ -22,8 +22,13 @@ namespace GloboTicket.Services.ShoppingBasket.Helpers
 
         public async Task<string> GetTokenAsync(string incomingToken, string apiScope)
         {
+            var param = new ClientAccessTokenParameters()
+            {
+                ForceRenewal = true,
+            };
+
             var item = await _clientAccessTokenCache
-                .GetAsync($"shoppingbaskettodownstreamtokenexchangeclient_{apiScope}");
+                .GetAsync($"shoppingbaskettodownstreamtokenexchangeclient_{apiScope}", param);
             if (item != null)
             {
                 return item.AccessToken;
@@ -38,12 +43,12 @@ namespace GloboTicket.Services.ShoppingBasket.Helpers
                 throw new Exception(discoveryDocumentResponse.Error);
             }
 
-            var customParams = new Dictionary<string, string>
+            var customParams = new Parameters(new List<KeyValuePair<string, string>>
             {
-                { "subject_token_type", "urn:ietf:params:oauth:token-type:access_token"},
-                { "subject_token", incomingToken},
-                { "scope", $"openid profile {apiScope}" }
-            };
+                new KeyValuePair<string, string>("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+                new KeyValuePair<string, string>("subject_token", incomingToken),
+                new KeyValuePair<string, string>("scope", $"openid profile {apiScope}")
+            });
 
             var tokenResponse = await client.RequestTokenAsync(new TokenRequest()
             {
@@ -62,7 +67,7 @@ namespace GloboTicket.Services.ShoppingBasket.Helpers
             await _clientAccessTokenCache.SetAsync(
                 $"shoppingbaskettodownstreamtokenexchangeclient_{apiScope}",
                 tokenResponse.AccessToken,
-                tokenResponse.ExpiresIn);
+                tokenResponse.ExpiresIn, param);
 
             return tokenResponse.AccessToken;
         }

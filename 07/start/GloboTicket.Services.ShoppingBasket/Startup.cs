@@ -1,23 +1,22 @@
-using AutoMapper;
 using GloboTicket.Integration.MessagingBus;
 using GloboTicket.Services.ShoppingBasket.DbContexts;
 using GloboTicket.Services.ShoppingBasket.Repositories;
 using GloboTicket.Services.ShoppingBasket.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Net.Http;
 using Polly;
 using Polly.Extensions.Http;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
+using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
 
 namespace GloboTicket.Services.ShoppingBasket
 {
